@@ -30,9 +30,10 @@ public class KafkaConsumer {
             ObjectMapper mapper = new ObjectMapper();
             MetricEvent event = mapper.readValue(metricEvent, MetricEvent.class);
             log.info(event);
-            Optional<MetricEvent> eventPresentInDB = metricEventRepository.findById(event.getDeviceId());
+            Optional<MetricEvent> eventPresentInDB = metricEventRepository.findByDeviceId(event.getDeviceId());
             if(eventPresentInDB.isPresent()) {
-                if(!checkDeviceInfo(event, eventPresentInDB.get())) {
+                log.info("metric data present with given device id");
+                if(!checkEventInfo(event, eventPresentInDB.get())) {
                     updateMetricEvent(event);
                 }
             } else {
@@ -43,7 +44,7 @@ public class KafkaConsumer {
         }
     }
 
-    private boolean checkDeviceInfo(MetricEvent event, MetricEvent eventFromDB) {
+    private boolean checkEventInfo(MetricEvent event, MetricEvent eventFromDB) {
         if(event.getMetrics().size() != eventFromDB.getMetrics().size() || event.getTimeStamps().size() != eventFromDB.getTimeStamps().size())
             return false;
         return event.getMetrics().entrySet().stream()
